@@ -1,25 +1,41 @@
+import serial
 import time
-import ttn
 
-app_id = "foo"
-access_key = "ttn-account.eiPq8mEeYRL_PNBZsOpPy-O3ABJXYWulODmQGR5PZzg"
-
-def uplink_callback(msg, client):
-  print("Received uplink from ", msg.dev_id)
-  print(msg)
-
-handler = ttn.HandlerClient(app_id, access_key)
-
-# using mqtt client
-mqtt_client = handler.data()
-mqtt_client.set_uplink_callback(uplink_callback)
-mqtt_client.connect()
-time.sleep(60)
-mqtt_client.close()
-
-# using application manager client
-app_client =  handler.application()
-my_app = app_client.get()
-print(my_app)
-my_devices = app_client.devices()
-print(my_devices)
+ser = serial.Serial()
+ser.port = '/dev/tty.usbserial-1410'
+ser.baudrate = 115200
+ser.bytesize = serial.EIGHTBITS
+ser.stopbits = serial.STOPBITS_ONE
+ser.parity = serial.PARITY_NONE
+ser.xonxoff = False
+ser.timeout = 1
+ser.open()
+if ser.is_open:
+    ser.write(b'at+reset=0\r\n')
+    time.sleep(0.5)
+    data = ser.read(100)
+    print(data)
+    ser.write(b'at+reload\r\n')
+    time.sleep(0.5)
+    data = ser.read(100)
+    print(data)
+    ser.write(b'at+mode=0\r\n')
+    time.sleep(0.5)
+    data = ser.read(100)
+    print(data)
+    # ser.write(b'at+get_config=ch_list\r\n')
+    # data = ser.read(10000)
+    # print(data)
+    ser.write(b'at+set_config=dev_addr:2604127F&nwks_key:6458B96076139234EAD79D7033C9A563&apps_key:444B3D2FDCD9C5F3D3E82BE86976F886\r\n')
+    time.sleep(1)
+    data = ser.read(100)
+    print(data)
+    ser.write(b'at+join=abp\r\n')
+    time.sleep(1)
+    data = ser.read(100)
+    print(data)
+    ser.write(b'at+send=1,2,11223344556677889900FF\r\n')
+    time.sleep(1)
+    data = ser.read(100)
+    print(data)
+    ser.close()
